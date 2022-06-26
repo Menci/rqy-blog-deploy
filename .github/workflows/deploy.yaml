@@ -1,0 +1,62 @@
+name: Deploy
+
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: The ref of site files repo.
+        required: false
+        default: main
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Checkout site files
+      uses: actions/checkout@v2
+      with:
+        repository: MenciStaticSites/rqy-blog
+        ref: ${{ github.event_name == 'push' && 'main' || github.event.inputs.ref }}
+        path: site
+    - name: Inject Service Worker
+      uses: Menci/service-worker-redirect-origin@main
+      with:
+        www-root: site
+        target-base-url: https://cdn-static.menci.xyz/rqy-blog
+    - name: Deploy to Cloudflare Pages
+      uses: cloudflare/pages-action@1
+      with:
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        projectName: menci-rqy-blog
+        directory: site
+        gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+    - name: Deploy to Aliyun OSS
+      uses: Menci/upload-to-oss@main
+      with:
+          access-key-id: ${{ secrets.ALIYUN_ACCESS_KEY_ID }}
+          access-key-secret: ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
+          bucket: ${{ secrets.ALIYUN_OSS_BUCKET }}
+          endpoint: ${{ secrets.ALIYUN_OSS_ENDPOINT }}
+          local-path: site
+          remote-path: rqy-blog
+          headers: |
+            filename => (
+              {
+                "Cache-Control": `public, max-age=${filename.endsWith(".html") ? 60 : 604800}`
+              }
+            )
+          delay-html-file-upload: true
+    - name: Deploy to Azure
+      if: ${{ github.event_name == 'push' }}
+      uses: Azure/static-web-apps-deploy@v1
+      with:
+        azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        action: upload
+        app_location: site
+        skip_app_build: true
+        config_file_location: .
