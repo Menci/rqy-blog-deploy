@@ -26,7 +26,7 @@ jobs:
       uses: Menci/service-worker-redirect-origin@main
       with:
         www-root: site
-        target-base-url: https://cdn-static.menci.xyz/rqy-blog
+        target-base-url: https://cdn-static.menci.xyz/rqy-blog/
     - name: Deploy to Cloudflare Pages
       uses: cloudflare/pages-action@1
       with:
