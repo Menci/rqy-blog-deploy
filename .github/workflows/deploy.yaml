@@ -26,7 +26,7 @@ jobs:
       uses: Menci/service-worker-redirect-origin@main
       with:
         www-root: site
-        target-base-url: https://cdn-static.menci.xyz/rqy-blog/
+        target-base-url: https://static.cdn.menci.xyz/rqy-blog/
     - name: Deploy to Static CDN
       uses: AyaInfra/StaticCDNDeploy@main
       with:
