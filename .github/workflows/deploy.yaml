@@ -22,6 +22,17 @@ jobs:
         repository: MenciStaticSites/rqy-blog
         ref: ${{ github.event_name == 'push' && 'main' || github.event.inputs.ref }}
         path: site
+    - name: Inject Service Worker
+      uses: Menci/service-worker-redirect-origin@main
+      with:
+        www-root: site
+        target-base-url: https://static.cdn.menci.xyz/rqy-blog/
+    - name: Deploy to Static CDN
+      uses: AyaInfra/StaticCDNDeploy@main
+      with:
+        deploy-credentials: ${{ secrets.STATIC_CDN_CREDENTIALS }}
+        local-path: site
+        remote-path: rqy-blog
     - name: Deploy to Azure
       uses: Azure/static-web-apps-deploy@v1
       with:
